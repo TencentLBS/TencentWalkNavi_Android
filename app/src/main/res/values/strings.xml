@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">步行导航</string>
+    <string name="car_navi_item">驾车</string>
+    <string name="bus_navi_item">公交</string>
+    <string name="walk_navi_item">步行</string>
+    <string name="search">搜索</string>
+    <string name="current_location">当前位置</string>
+    <string name="start_navigation">开始导航</string>
+    <string name="stop_navigation">结束导航</string>
+
+    <string name="route">导航算路</string>
+    <string name="navi_time">实时导航</string>
+    <string name="navi_simu">模拟导航</string>
+
+    <string name="navi_set">导航配置设置</string>
+    <string name="navi_component">导航组件</string>
+
+    <string name="navimode">设置导航模式</string>
+    <string name="navi_default_res">设置是否使用默认资源</string>
+    <string name="navifixing_proportion">设置车标位置</string>
+    <string name="naviline_width">设置路线宽度</string>
+    <string name="navi_panel_hide">设置是否隐藏导航面板</string>
+    <string name="navi_panel_style">自定义导航面板</string>
+</resources>
