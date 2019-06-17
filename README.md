@@ -1,4 +1,4 @@
-# 一体化导航SDK
+# 步行导航SDK
 
 
 
@@ -165,7 +165,7 @@ buildTypes {
 
 ### Key配置
 
-要正常使用腾讯地图SDK用户需要在[腾讯位置服务官网](<https://lbs.qq.com/console/key.html>)申请开发密钥，申请开发密钥是免费的，腾讯地图SDK的使用也是免费的。
+要正常使用步行导航SDK，用户需要在[腾讯位置服务官网](<https://lbs.qq.com/console/key.html>)申请开发密钥，申请开发密钥是免费的。
 
 开发者申请key后，把Key输入工程的AndroidManifest.xml文件中，在application节点里，添加名称为TencentMapSDK的meta，如下所示(value值为申请的key)：
 
@@ -278,7 +278,7 @@ mWalkNaviManager.searchRoute(fromPoi, targetPoi, mRouteSearchCallback);
 
 ```java
 //开始导航
-public void startNavi(int index, boolean isSimulate)
+public void startNavi(int index)
 
 //结束导航
 public void stopNavi()
@@ -289,7 +289,6 @@ public void stopNavi()
 | 参数       | 说明                                                         |
 | ---------- | ------------------------------------------------------------ |
 | index      | 开始坐标在所有路线规划点串中的index，如果从路线规划起点开始导航则index传入0 |
-| isSimulate | false 表示真实导航，true 表示模拟导航                        |
 
 #### 导航界面
 
@@ -413,6 +412,12 @@ private WalkNaviManager mWalkNaviManager = new WalkNaviManager(this);
 mWalkNaviManager.setNaviCallback(mWalkNaviCallback);
 mWalkNaviManager.addNaviView(mINaviView);
 mWalkNaviManager.addNaviView(mWalkNaviView);
+//启用内部语音播报
+mWalkNaviManager.setInternalTtsEnabled(true);
+//设置定位源
+SimulateLocationSource locationSource = new SimulateLocationSource();//模拟定位
+RealLocationSource locationSource = new RealLocationSource(this);//真实定位
+mWalkNaviManager.setLocationSource(locationSource);
 ```
 
 **第3步，地图生命周期管理**
@@ -496,7 +501,7 @@ private RouteSearchCallback mRouteSearchCallback = new RouteSearchCallback() {
         @Override
         public void onRouteSearchSuccess(ArrayList<RouteData> routes) {
             if (mWalkNaviManager != null) {
-                mWalkNaviManager.startNavi(0, false);
+                mWalkNaviManager.startNavi(0);
             }
         }
     };
@@ -578,10 +583,10 @@ mWalkNaviManager.setIsDefaultRes(false);
 
 ```java
 //设置导航过程中3D车头朝上模式下自车点位于地图宽高的比例，默认x坐标为0.5 ，y坐标为0.75。
-mWalkNaviView.setNaviFixingProportion3D(0.5f,0.5f);
+mWalkNaviView.setNaviFixingProportion3D(0.5f, 0.5f);
 
 //设置导航过程中2D模式下，自车点位于地图宽高的比例，默认x坐标为0.5 ，y坐标为0.75
-mWalkNaviView.setNaviFixingProportion2D(0.5f,0.5f);
+mWalkNaviView.setNaviFixingProportion2D(0.5f, 0.5f);
 ```
 
 **示例**：
