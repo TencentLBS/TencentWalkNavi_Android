@@ -1,0 +1,29 @@
+/* Javadoc 样式表 */
+
+/* 定义覆盖此处缺省值的颜色、字体和其它样式属性 */
+
+/* 页面背景颜色 */
+body { background-color: #FFFFFF }
+
+/* 表格颜色 */
+.TableHeadingColor     { background: #CCCCFF } /* 深色 */
+.TableSubHeadingColor  { background: #EEEEFF } /* 浅色 */
+.TableRowColor         { background: #FFFFFF } /* 白色 */
+
+/* 左侧框架列表所用的字体。 */
+.FrameTitleFont   { font-size: normal; font-family: normal }
+.FrameHeadingFont { font-size: normal; font-family: normal }
+.FrameItemFont    { font-size: normal; font-family: normal }
+
+/* 框架中所用的小号 sans-serif 字体示例 */
+/* .FrameItemFont  { font-size: 10pt; font-family: Helvetica, Arial, sans-serif } */
+
+/* 导航栏字体和颜色 */
+.NavBarCell1    { background-color:#EEEEFF;}/* 浅色 */
+.NavBarCell1Rev { background-color:#00008B;}/* 深蓝色 */
+.NavBarFont1    { font-family: Arial, Helvetica, sans-serif; color:#000000;}
+.NavBarFont1Rev { font-family: Arial, Helvetica, sans-serif; color:#FFFFFF;}
+
+.NavBarCell2    { font-family: Arial, Helvetica, sans-serif; background-color:#FFFFFF;}
+.NavBarCell3    { font-family: Arial, Helvetica, sans-serif; background-color:#FFFFFF;}
+
