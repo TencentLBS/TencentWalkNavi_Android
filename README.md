@@ -165,7 +165,7 @@ buildTypes {
 
 ### Key配置
 
-要正常使用步行导航SDK，用户需要在[腾讯位置服务官网](<https://lbs.qq.com/console/key.html>)申请开发密钥，申请开发密钥是免费的。
+要正常使用步行导航SDK，用户需要在[腾讯位置服务官网](<https://lbs.qq.com/console/key.html>)申请开发密钥，需要联系商务人员开通步行导航SDK的权限。
 
 开发者申请key后，把Key输入工程的AndroidManifest.xml文件中，在application节点里，添加名称为TencentMapSDK的meta，如下所示(value值为申请的key)：
 
