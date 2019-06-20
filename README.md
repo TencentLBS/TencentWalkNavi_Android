@@ -150,6 +150,36 @@ dependencies {
 
 	private int callback(...);
 }
+
+-keep class com.tencent.map.route.data.Route {
+    <fields>;
+}
+-keep class com.tencent.map.engine.data.GuidanceGPSPoint {
+    <fields>;
+    public <methods>;
+}
+-keep class com.tencent.map.engine.data.GuidanceEventPoint {
+   <fields>;
+   public <methods>;
+}
+-keep class com.tencent.map.route.data.RouteSegment {
+    <fields>;
+    public <methods>;
+}
+-keep class com.tencent.map.route.data.Door {
+    <fields>;
+    public <methods>;
+}
+
+-keep public class com.iflytek.tts.TtsService.Tts {
+	native <methods>;
+	public native <methods>;
+	public static native <methods>;
+}
+
+-keep public class com.iflytek.tts.TtsService.AudioData {
+	*;
+}
 ```
 
 然后在module的build.gradle文件中引用该混淆文件：
