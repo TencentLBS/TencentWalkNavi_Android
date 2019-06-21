@@ -170,6 +170,10 @@ dependencies {
     <fields>;
     public <methods>;
 }
+-keep class com.tencent.map.route.data.LandMarker {
+    <fields>;
+    public <methods>;
+}
 
 -keep public class com.iflytek.tts.TtsService.Tts {
 	native <methods>;
