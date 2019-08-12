@@ -450,6 +450,7 @@ mWalkNaviManager.addNaviView(mWalkNaviView);
 mWalkNaviManager.setInternalTtsEnabled(true);
 //设置定位源
 SimulateLocationSource locationSource = new SimulateLocationSource();//模拟定位
+locationSource.setRoute(routes.get(mRouteIndex) 或者 mWalkNaviManager.getRouteData(mRouteIndex));
 RealLocationSource locationSource = new RealLocationSource(this);//真实定位
 mWalkNaviManager.setLocationSource(locationSource);
 ```
@@ -535,7 +536,7 @@ private RouteSearchCallback mRouteSearchCallback = new RouteSearchCallback() {
         @Override
         public void onRouteSearchSuccess(ArrayList<RouteData> routes) {
             if (mWalkNaviManager != null) {
-                mWalkNaviManager.startNavi(0);
+                mWalkNaviManager.startNavi(mRouteIndex);
             }
         }
     };
