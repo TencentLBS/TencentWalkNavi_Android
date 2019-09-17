@@ -4,13 +4,14 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
-import com.tencent.map.navi.INaviView;
+import com.tencent.map.navi.IWalkNaviView;
 import com.tencent.map.navi.RouteSearchCallback;
 import com.tencent.map.navi.WalkNaviCallback;
 import com.tencent.map.navi.WalkNaviManager;
 import com.tencent.map.navi.data.NaviPoi;
-import com.tencent.map.navi.data.NavigationData;
-import com.tencent.map.navi.data.RouteData;
+import com.tencent.map.navi.data.NaviTts;
+import com.tencent.map.navi.data.WalkNaviData;
+import com.tencent.map.navi.data.WalkRouteData;
 import com.tencent.map.navi.walk.WalkNaviView;
 
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class BaseActivity extends AppCompatActivity {
 
     }
 
-    private void initManager(){
+    private void initManager() {
         //创建WalkNaviManager实例
         mWalkNaviManager = new WalkNaviManager(this);
         mWalkNaviView = findViewById(R.id.naviview);
@@ -48,7 +49,7 @@ public class BaseActivity extends AppCompatActivity {
     /**
      * 发起路线规划
      */
-    private void initRoute(){
+    private void initRoute() {
         //构造起点
         NaviPoi fromPoi = new NaviPoi();
         fromPoi.setLatitude(39.979491);
@@ -74,10 +75,10 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onRouteSearchSuccess(ArrayList<RouteData> routes) {
+        public void onRouteSearchSuccess(ArrayList<WalkRouteData> routes) {
             //路线规划成功回调
-            if (mWalkNaviManager != null){
-                mWalkNaviManager.startNavi(0, true);
+            if (mWalkNaviManager != null) {
+                mWalkNaviManager.startNavi(0);
             }
         }
     };
@@ -85,10 +86,10 @@ public class BaseActivity extends AppCompatActivity {
     /**
      * 创建导航面板更新协议INaviView.用户若需要自定义导航面板,可以实现该协议从而获取面板数据.
      */
-    private INaviView mINaviView = new INaviView() {
+    private IWalkNaviView mINaviView = new IWalkNaviView() {
 
         @Override
-        public void onUpdateNavigationData(NavigationData data) {
+        public void onUpdateNavigationData(WalkNaviData data) {
             //获取实时导航数据：速度、距离、时间、路名、导航操作及转向箭头、是否室内等
         }
 
@@ -123,7 +124,7 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onRecalculateRouteSuccess(int type,ArrayList<RouteData> routeDataList) {
+        public void onRecalculateRouteSuccess(int type, ArrayList<WalkRouteData> routeDataList) {
             //重新路线规划成功
         }
 
@@ -138,16 +139,22 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         @Override
+        public int onVoiceBroadcast(NaviTts naviTts) {
+            return 0;
+        }
+
+        @Override
         public void onArrivedDestination() {
             //到达目的地
         }
 
         @Override
-        public void onLocationSwitched(String name, boolean on){
+        public void onLocationSwitched(String name, boolean on) {
             //定位相关设备状态
         }
+
         @Override
-        public void onLocationStatusChanged(String name, boolean isValid){
+        public void onLocationStatusChanged(String name, boolean isValid) {
             //定位相关设备状态
         }
     };

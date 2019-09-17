@@ -15,7 +15,7 @@ public class DoorMarker {
         return marker;
     }
 
-    public void setBuildingId(String buildingId){
+    public void setBuildingId(String  buildingId){
         this.buildingId = buildingId;
     }
 

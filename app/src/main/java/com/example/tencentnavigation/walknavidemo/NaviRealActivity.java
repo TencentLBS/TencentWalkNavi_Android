@@ -1,7 +1,6 @@
 package com.example.tencentnavigation.walknavidemo;
 
 import android.Manifest;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,16 +9,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-import com.example.tencentnavigation.walknavidemo.util.DemoUtil;
-import com.tencent.map.geolocation.TencentLocation;
-import com.tencent.map.geolocation.TencentLocationListener;
-import com.tencent.map.geolocation.TencentLocationManager;
-import com.tencent.map.geolocation.TencentLocationRequest;
+import com.tencent.map.location.ILocationSource;
+import com.tencent.map.location.RealLocationSource;
 import com.tencent.map.navi.RouteSearchCallback;
 import com.tencent.map.navi.WalkNaviCallback;
 import com.tencent.map.navi.WalkNaviManager;
 import com.tencent.map.navi.data.NaviPoi;
-import com.tencent.map.navi.data.RouteData;
+import com.tencent.map.navi.data.NaviTts;
+import com.tencent.map.navi.data.WalkRouteData;
 import com.tencent.map.navi.walk.WalkNaviView;
 
 import java.util.ArrayList;
@@ -31,10 +28,9 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
 
     private static final String TAG = "navisdk";
 
+    private ILocationSource mLocationSource;
     private WalkNaviManager mWalkNaviManager;
     private WalkNaviView mWalkNaviView;
-
-    private TencentLocationManager locationManager = null;
 
     private Button stopBtn;
 
@@ -85,6 +81,7 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
         mWalkNaviView = findViewById(R.id.naviview);
         mWalkNaviManager.addNaviView(mWalkNaviView);
         mWalkNaviManager.setNaviCallback(mWalkNaviCallback);
+        mWalkNaviManager.setInternalTtsEnabled(true);
     }
 
     /**
@@ -114,9 +111,12 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
         }
 
         @Override
-        public void onRouteSearchSuccess(ArrayList<RouteData> routes) {
+        public void onRouteSearchSuccess(ArrayList<WalkRouteData> routes) {
             if (mWalkNaviManager != null) {
-                mWalkNaviManager.startNavi(0, false);
+                mLocationSource = new RealLocationSource(getApplicationContext());
+                mLocationSource.startLocation();
+                mWalkNaviManager.setLocationSource(mLocationSource);
+                mWalkNaviManager.startNavi(0);
             }
         }
     };
@@ -146,7 +146,7 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
         }
 
         @Override
-        public void onRecalculateRouteSuccess(int type,ArrayList<RouteData> routeDataList) {
+        public void onRecalculateRouteSuccess(int type,ArrayList<WalkRouteData> routeDataList) {
             //重新路线规划成功
         }
 
@@ -161,11 +161,19 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
         }
 
         @Override
+        public int onVoiceBroadcast(NaviTts naviTts) {
+            return 0;
+        }
+
+        @Override
         public void onArrivedDestination() {
             //到达目的地
-            disableLocation();
             if (mWalkNaviManager != null) {
                 mWalkNaviManager.stopNavi();
+            }
+            if (mLocationSource != null) {
+                mLocationSource.stopLocation();
+                mLocationSource = null;
             }
         }
 
@@ -179,56 +187,18 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
         }
     };
 
-    private TencentLocationListener mTencentLocationListener = new TencentLocationListener() {
-        @Override
-        public void onLocationChanged(final TencentLocation tencentLocation, int error, String reason) {
-            if (mWalkNaviManager != null) {
-                mWalkNaviManager.onLocationChanged(DemoUtil.convertToGpsLocation(tencentLocation), error, reason);
-            }
-        }
-
-        @Override
-        public void onStatusUpdate(String name, int status, String desc) {
-            if (mWalkNaviManager != null) {
-                mWalkNaviManager.onStatusUpdate(name, status, desc);
-            }
-        }
-    };
-
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.navi_stop:
-                disableLocation();
                 if (mWalkNaviManager != null) {
                     mWalkNaviManager.stopNavi();
                 }
+                if (mLocationSource != null) {
+                    mLocationSource.stopLocation();
+                    mLocationSource = null;
+                }
                 break;
-        }
-    }
-
-    private int enableLocation(Context context) {
-        Log.i(TAG, "enableLocation");
-        TencentLocationRequest request = TencentLocationRequest.create();
-        request.setInterval(1000);
-        request.setAllowCache(true);
-        request.setAllowDirection(true);
-        request.setRequestLevel(TencentLocationRequest.REQUEST_LEVEL_GEO);
-        locationManager = TencentLocationManager.getInstance(context);
-        int error = locationManager.requestLocationUpdates(request, mTencentLocationListener);
-        if (error == 0) {
-            locationManager.startIndoorLocation();
-        }
-        Log.i(TAG, "enableLocation error: " + error);
-        return error;
-    }
-
-    private void disableLocation() {
-        Log.i(TAG, "disableLocation");
-        if (locationManager != null) {
-            locationManager.stopIndoorLocation();
-            locationManager.removeUpdates(mTencentLocationListener);
-            locationManager = null;
         }
     }
 
@@ -257,7 +227,6 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
         if (mWalkNaviView != null) {
             mWalkNaviView.onResume();
         }
-        enableLocation(this);
     }
 
     @Override
@@ -285,6 +254,10 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
         if (mWalkNaviView != null) {
             mWalkNaviView.onDestroy();
             mWalkNaviView = null;
+        }
+        if (mLocationSource != null) {
+            mLocationSource.stopLocation();
+            mLocationSource = null;
         }
         super.onDestroy();
     }

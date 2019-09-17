@@ -21,7 +21,6 @@ import android.widget.Toast;
 
 import com.example.tencentnavigation.walknavidemo.util.StorageUtil;
 import com.tencent.map.navi.NaviMode;
-import com.tencent.map.navi.utils.CommonUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -164,9 +163,9 @@ public class SettingsActivity extends Activity implements View.OnClickListener, 
     }
 
     private void initDeviceInfo() {
-        String imei = CommonUtil.getImei(this);
-        TextView textView = findViewById(R.id.deviceInfo);
-        textView.setText("IMEI: " + imei);
+//        String imei = CommonUtil.getImei(this);
+//        TextView textView = findViewById(R.id.deviceInfo);
+//        textView.setText("IMEI: " + imei);
     }
 
     @Override

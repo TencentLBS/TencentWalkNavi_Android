@@ -2,7 +2,6 @@ package com.example.tencentnavigation.walknavidemo;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -27,17 +26,17 @@ import android.widget.Toast;
 import com.example.tencentnavigation.walknavidemo.util.DemoUtil;
 import com.example.tencentnavigation.walknavidemo.util.GPSRecordEngine;
 import com.example.tencentnavigation.walknavidemo.util.GPSReplayEngine;
-import com.tencent.map.geolocation.TencentLocation;
-import com.tencent.map.geolocation.TencentLocationListener;
-import com.tencent.map.geolocation.TencentLocationManager;
-import com.tencent.map.geolocation.TencentLocationRequest;
-import com.tencent.map.navi.INaviView;
+import com.tencent.map.location.ILocationSource;
+import com.tencent.map.location.RealLocationSource;
+import com.tencent.map.location.SimulateLocationSource;
+import com.tencent.map.navi.IWalkNaviView;
 import com.tencent.map.navi.NaviMode;
 import com.tencent.map.navi.WalkNaviCallback;
 import com.tencent.map.navi.WalkNaviManager;
 import com.tencent.map.navi.data.GpsLocation;
-import com.tencent.map.navi.data.NavigationData;
-import com.tencent.map.navi.data.RouteData;
+import com.tencent.map.navi.data.NaviTts;
+import com.tencent.map.navi.data.WalkNaviData;
+import com.tencent.map.navi.data.WalkRouteData;
 import com.tencent.map.navi.walk.WalkNaviView;
 import com.tencent.tencentmap.mapsdk.maps.TencentMap;
 import com.tencent.tencentmap.mapsdk.maps.model.BitmapDescriptorFactory;
@@ -72,7 +71,7 @@ public class NavigationActivity extends Activity {
     private TextView info;
 
 
-    private TencentLocationManager locationManager = null;
+    private ILocationSource mLocationSource;
 
     private WalkNaviManager mWalkNaviManager;
 
@@ -157,27 +156,28 @@ public class NavigationActivity extends Activity {
             }
 
             if (mSimulateNavi) {
-                if (mWalkNaviManager != null) {
-                    mWalkNaviManager.startNavi(mRouteIndex, mSimulateNavi);
-                }
+                WalkRouteData walkRouteData = mWalkNaviManager.getRouteData(mRouteIndex);
+                SimulateLocationSource locationSource = new SimulateLocationSource();
+                locationSource.setRoute(walkRouteData);
+                mLocationSource = locationSource;
             } else {
                 Log.w(TAG, "gps track type: " + mGpsTrackType + ", file path: " + mGpsTrackPath);
                 if (mGpsTrackType == 1 && !TextUtils.isEmpty(mGpsTrackPath)) {
-                    GPSReplayEngine.getInstance().addTencentLocationListener(mTencentLocationListener);
-                    GPSReplayEngine.getInstance().startMockTencentLocation(mGpsTrackPath);
+                    MockLocationSource mockLocationSource = new MockLocationSource();
+                    mockLocationSource.setGpsTrackPath(mGpsTrackPath);
+                    mLocationSource = mockLocationSource;
                 } else {
+                    mLocationSource = new RealLocationSource(this);
                     if (mGpsTrackType == 0) {
                         GPSRecordEngine.getInstance().startRecordTencentLocation(this, mGpsTrackPath);
                     }
-                    int error = enableGps(this);
-                    if (error != 0) {
-                        Log.e(TAG, "can't start gps!!!");
-                    }
-                }
-                if (mWalkNaviManager != null) {
-                    mWalkNaviManager.startNavi(mRouteIndex, mSimulateNavi);
                 }
             }
+            if (mLocationSource != null) {
+                mLocationSource.addListener(mLocationSourceListener);
+                mLocationSource.startLocation();
+            }
+            mWalkNaviManager.setLocationSource(mLocationSource);
         }
     }
 
@@ -208,6 +208,10 @@ public class NavigationActivity extends Activity {
         if (mNaviView != null) {
             mNaviView.onDestroy();
             mNaviView = null;
+        }
+        if (mLocationSource != null) {
+            mLocationSource.stopLocation();
+            mLocationSource = null;
         }
         super.onDestroy();
     }
@@ -327,46 +331,14 @@ public class NavigationActivity extends Activity {
         mWalkNaviManager.setInternalTtsEnabled(true);
     }
 
-    private int enableGps(Context context) {
-        Log.i(TAG, "enableGps");
-        TencentLocationRequest request = TencentLocationRequest.create();
-        request.setInterval(1000);
-        request.setAllowCache(true);
-        request.setAllowDirection(true);
-        //request.setIndoorLocationMode(true);
-        request.setRequestLevel(TencentLocationRequest.REQUEST_LEVEL_GEO);
-        locationManager = TencentLocationManager.getInstance(context);
-        int error = locationManager.requestLocationUpdates(request, mTencentLocationListener);
-        if (error == 0) {
-            locationManager.startIndoorLocation();
-        }
-        Log.i(TAG, "enableGps error: " + error);
-        return error;
-    }
-
-    private void disableGps() {
-        Log.i(TAG, "disableGps");
-        if (locationManager != null) {
-            locationManager.stopIndoorLocation();
-            locationManager.removeUpdates(mTencentLocationListener);
-            locationManager = null;
-        }
-    }
-
     private void stopNavigation() {
         if (mSimulateNavi) {
             if (mWalkNaviManager != null) {
                 mWalkNaviManager.stopNavi();
             }
         } else {
-            if (mGpsTrackType == 1 && !TextUtils.isEmpty(mGpsTrackPath)) {
-                GPSReplayEngine.getInstance().removeTencentLocationListener(mTencentLocationListener);
-                GPSReplayEngine.getInstance().stopMockTencentLocation();
-            } else {
-                if (mGpsTrackType == 0) {
-                    GPSRecordEngine.getInstance().stopRecordTencentLocation(this);
-                }
-                disableGps();
+            if (mGpsTrackType == 0) {
+                GPSRecordEngine.getInstance().stopRecordTencentLocation(this);
             }
             if (mWalkNaviManager != null) {
                 mWalkNaviManager.stopNavi();
@@ -374,16 +346,12 @@ public class NavigationActivity extends Activity {
         }
     }
 
-    private TencentLocationListener mTencentLocationListener = new TencentLocationListener() {
+    private ILocationSource.LocationSourceListener mLocationSourceListener = new ILocationSource.LocationSourceListener() {
         @Override
-        public void onLocationChanged(final TencentLocation tencentLocation, int error, String reason) {
-            if (mWalkNaviManager != null) {
-                mWalkNaviManager.onLocationChanged(DemoUtil.convertToGpsLocation(tencentLocation), error, reason);
-            }
-            GpsLocation gpsLocation = DemoUtil.convertToGpsLocation(tencentLocation);
-            updateRealLocation(gpsLocation);
+        public void onLocationChanged(final GpsLocation location, int error, String reason) {
+            updateRealLocation(location);
             if (mRecordLocation) {
-                recordRealLocation(gpsLocation);
+                recordRealLocation(location);
             } else {
                 clearLocationMarkers();
             }
@@ -391,9 +359,8 @@ public class NavigationActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mLogTextView.append(mLocationCount + " 定位点(" + tencentLocation.getLatitude() + ", "
-                            + tencentLocation.getLongitude() + "), 楼层:"
-                            + tencentLocation.getIndoorBuildingFloor() + "\n");
+                    mLogTextView.append(mLocationCount + " 定位点(" + location.getLatitude() + ", "
+                            + location.getLongitude() + "), 楼层:" + location.getFloorName() + "\n");
                     int offset = mLogTextView.getLineCount() * mLogTextView.getLineHeight();
                     if (offset > mLogTextView.getHeight()) {
                         mLogTextView.scrollTo(0, offset - mLogTextView.getHeight());
@@ -401,15 +368,13 @@ public class NavigationActivity extends Activity {
                 }
             });
             if (mGpsTrackType == 0) {
-                GPSRecordEngine.getInstance().recordTencentLocation(tencentLocation);
+                GPSRecordEngine.getInstance().recordGpsLocation(location);
             }
         }
 
         @Override
         public void onStatusUpdate(String name, int status, String desc) {
-            if (mWalkNaviManager != null) {
-                mWalkNaviManager.onStatusUpdate(name, status, desc);
-            }
+
         }
     };
 
@@ -455,7 +420,7 @@ public class NavigationActivity extends Activity {
         }
 
         @Override
-        public void onRecalculateRouteSuccess(int type,ArrayList<RouteData> routeDataList) {
+        public void onRecalculateRouteSuccess(int type,ArrayList<WalkRouteData> routeDataList) {
             showBottomDialog(RECALCULATE_ROUTE_SUCCESS);
             //2s后取消弹窗
             Timer timer = new Timer();
@@ -479,12 +444,12 @@ public class NavigationActivity extends Activity {
             bottomDialog.cancel();
         }
 
-//        @Override
-//        public int onVoiceBroadcast(NaviTts tts) {
-//            //TtsHelper.getInstance().read(tts, TencentNavigationActivity.this);
-//            Log.e(TAG, "语音播报文案：" + tts.getText());
-//            return 1;
-//        }
+        @Override
+        public int onVoiceBroadcast(NaviTts tts) {
+            //TtsHelper.getInstance().read(tts, TencentNavigationActivity.this);
+            Log.e(TAG, "语音播报文案：" + tts.getText());
+            return 1;
+        }
 
         @Override
         public void onArrivedDestination() {
@@ -533,10 +498,10 @@ public class NavigationActivity extends Activity {
         }
     };
 
-    private INaviView mINaviView = new INaviView() {
+    private IWalkNaviView mINaviView = new IWalkNaviView() {
 
         @Override
-        public void onUpdateNavigationData(NavigationData data) {
+        public void onUpdateNavigationData(WalkNaviData data) {
             Log.e(TAG, "navigationData：" + data.getLeftDistance() +"--" + data.getLeftTime());
             updateLeftDistanceTime(data.getLeftDistance(), data.getLeftTime());
             if (data.isIndoor()){

@@ -7,11 +7,16 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+
 import com.tencent.map.geolocation.TencentLocation;
-import com.tencent.map.navi.utils.TransformUtil;
+import com.tencent.map.navi.data.GpsLocation;
 import com.tencent.tencentmap.mapsdk.maps.model.LatLng;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -98,6 +103,12 @@ public class GPSRecordEngine {
 		}
 	}
 
+	public void recordGpsLocation(GpsLocation gpsLocation) {
+		if (mIsRecording && gpsLocation != null) {
+			mGpsList.add(locationToString(gpsLocation));
+		}
+	}
+
 	public void stopRecordTencentLocation(Context context) {
 		Toast.makeText(context, "stop record location, save to file...", Toast.LENGTH_SHORT).show();
 		Log.i(TAG, "stop record location, save to file...");
@@ -112,12 +123,12 @@ public class GPSRecordEngine {
 			mRecordFileName += ".gps";
 		}
 		float results[] = new float[2];
-		float distance = 0, heading = 0;
+		float heading;
 		for (int i = 0; i < points.size() - 1; i++) {
 			LatLng p1 = points.get(i);
 			LatLng p2 = points.get(i + 1);
-			TransformUtil.distanceBetween(p1.latitude, p1.longitude, p2.latitude, p2.longitude, results);
-			distance = results[0];
+			Location.distanceBetween(p1.latitude, p1.longitude, p2.latitude, p2.longitude, results);
+			//distance = results[0];
 			heading = results[1];
 			// 确保方向角大于0°
 			while (heading < 0) {
@@ -198,6 +209,37 @@ public class GPSRecordEngine {
 		sb.append(location.getIndoorBuildingId());
 		sb.append(",");
 		sb.append(location.getIndoorBuildingFloor());
+		sb.append("\n");
+		return sb.toString();
+	}
+
+	private String locationToString(GpsLocation location) {
+		StringBuilder sb = new StringBuilder();
+
+		long time = System.currentTimeMillis();
+		String timeStr = gpsDataFormatter.format(new Date(time));
+
+		sb.append(location.getLatitude());
+		sb.append(",");
+		sb.append(location.getLongitude());
+		sb.append(",");
+		sb.append(location.getAccuracy());
+		sb.append(",");
+		sb.append(location.getDirection());
+		sb.append(",");
+		sb.append(location.getVelocity());
+		sb.append(",");
+		sb.append(timeStr);
+		sb.append(",");
+		sb.append(df.format((double) time / 1000.0));
+		// sb.append(df.format(System.currentTimeMillis()/1000.0));
+		// sb.append(df.format(location.getTime()/1000.0));
+		sb.append(",");
+		sb.append(location.getAltitude());
+		sb.append(",");
+		sb.append(location.getBuildingId());
+		sb.append(",");
+		sb.append(location.getFloorName());
 		sb.append("\n");
 		return sb.toString();
 	}

@@ -18,7 +18,7 @@ import com.example.tencentnavigation.walknavidemo.util.NaviConfig;
 import com.tencent.map.navi.RouteSearchCallback;
 import com.tencent.map.navi.WalkNaviManager;
 import com.tencent.map.navi.data.NaviPoi;
-import com.tencent.map.navi.data.RouteData;
+import com.tencent.map.navi.data.WalkRouteData;
 import com.tencent.map.navi.data.line.Line;
 import com.tencent.map.navi.data.step.DoorStep;
 import com.tencent.map.navi.data.step.ElevatorStep;
@@ -57,7 +57,7 @@ public class RouteActivity extends AppCompatActivity {
     private NaviPoi fromPoi;
     private NaviPoi targetPoi;
     //路线规划结果
-    private RouteData mRouteData;
+    private WalkRouteData mRouteData;
 
     /**
      * 起点和终点位置信息
@@ -106,9 +106,9 @@ public class RouteActivity extends AppCompatActivity {
      * 初始化地图
      * 使用SupportMapFragment加载地图
      */
-    private void initmap(){
+    private void initmap() {
         FragmentManager fm = getSupportFragmentManager();
-        SupportMapFragment mapFragment = (SupportMapFragment)fm.findFragmentById(R.id.map_frag);
+        SupportMapFragment mapFragment = (SupportMapFragment) fm.findFragmentById(R.id.map_frag);
         mTencentMap = mapFragment.getMap();
         mTencentMap.setIndoorEnabled(true);
         mTencentMap.enableMultipleInfowindow(true);
@@ -116,8 +116,8 @@ public class RouteActivity extends AppCompatActivity {
         mTencentMap.setOnIndoorStateChangeListener(mOnIndoorStateChangeListener);
     }
 
-    private void initResource(){
-        mRealFromBitmap =  DemoUtil.readAssetsImg(getApplicationContext(), NaviConfig.NAVI_LINE_FROM_MARKER);
+    private void initResource() {
+        mRealFromBitmap = DemoUtil.readAssetsImg(getApplicationContext(), NaviConfig.NAVI_LINE_FROM_MARKER);
         mRealFromBitmapGray = DemoUtil.readAssetsImg(getApplicationContext(), NaviConfig.NAVI_LINE_FROM_MARKER_GRAY);
         mRealToBitmap = DemoUtil.readAssetsImg(getApplicationContext(), NaviConfig.NAVI_LINE_TO_MARKER);
         mRealToBitmapGray = DemoUtil.readAssetsImg(getApplicationContext(), NaviConfig.NAVI_LINE_TO_MARKER_GRAY);
@@ -130,7 +130,7 @@ public class RouteActivity extends AppCompatActivity {
     /**
      * 请求路线规划
      */
-    private void initRoute(){
+    private void initRoute() {
         mWalkNaviManager = new WalkNaviManager(this);
         //构造起点
         fromPoi = new NaviPoi();
@@ -151,17 +151,17 @@ public class RouteActivity extends AppCompatActivity {
     private RouteSearchCallback mRouteSearchCallback = new RouteSearchCallback() {
         @Override
         public void onRouteSearchFailure(int errorCode, String errorMessage) {
-            Log.e("route","error:"+ errorCode);
+            Log.e("route", "error:" + errorCode);
         }
 
         @Override
-        public void onRouteSearchSuccess(ArrayList<RouteData> routes) {
+        public void onRouteSearchSuccess(ArrayList<WalkRouteData> routes) {
             if (routes == null || routes.size() == 0) {
                 return;
             }
 
             //选择一条路线，虽然目前检索只返回一条
-            if (routes != null && routes.size() > 0){
+            if (routes != null && routes.size() > 0) {
                 mRouteData = routes.get(0);
                 drawFromAndToMarker();
                 drawRoute(mRouteData);
@@ -175,7 +175,7 @@ public class RouteActivity extends AppCompatActivity {
     /**
      * 绘制真实起终点marker
      */
-    private void drawFromAndToMarker(){
+    private void drawFromAndToMarker() {
         //添加起点marker
         MarkerOptions fromMarkerOptions = new MarkerOptions(new LatLng(mRealFromLatitude, mRealFromLongitude));
         fromMarkerOptions.icon(BitmapDescriptorFactory.fromBitmap(mRealFromBitmap))
@@ -204,7 +204,7 @@ public class RouteActivity extends AppCompatActivity {
      *
      * @param routeData
      */
-    private void drawRoute(RouteData routeData) {
+    private void drawRoute(WalkRouteData routeData) {
         ArrayList<LatLng> points = routeData.getRoutePoints();
         ArrayList<Line> lines = routeData.getRenderLines();
         for (int i = 0; i < lines.size(); i++) {
@@ -252,7 +252,7 @@ public class RouteActivity extends AppCompatActivity {
     /**
      * 绘制路线上的出口、电梯等Marker
      */
-    private void drawRouteMarkers(RouteData routeData) {
+    private void drawRouteMarkers(WalkRouteData routeData) {
         ArrayList<LatLng> points = routeData.getRoutePoints();
         ArrayList<Step> steps = routeData.getSteps();
         for (int i = 0; i < steps.size(); i++) {
@@ -366,7 +366,7 @@ public class RouteActivity extends AppCompatActivity {
         }
     }
 
-    private void zoomMapToSpan(RouteData routeData) {
+    private void zoomMapToSpan(WalkRouteData routeData) {
         if (routeData == null) {
             return;
         }
@@ -386,88 +386,88 @@ public class RouteActivity extends AppCompatActivity {
      * 起点和终点marker的状态
      */
     private void changeMarkerState() {
-        if (!TextUtils.isEmpty(curIndoorBuildingId) && !TextUtils.isEmpty(curFloorName)){
+        if (!TextUtils.isEmpty(curIndoorBuildingId) && !TextUtils.isEmpty(curFloorName)) {
             //当前建筑非当前楼层，置灰起点marker
             if (!TextUtils.isEmpty(mRealFromBuildingId) && !TextUtils.isEmpty(mRealFromFloorName)
-                    && curIndoorBuildingId.equals(mRealFromBuildingId) && !curFloorName.equals(mRealFromFloorName)){
+                    && curIndoorBuildingId.equals(mRealFromBuildingId) && !curFloorName.equals(mRealFromFloorName)) {
                 realFromMarkerGray();
-            }else{
+            } else {
                 realFromMarkerHigh();
             }
 
             //当前建筑非当前楼层，置灰终点marker
             if (!TextUtils.isEmpty(mRealToBuildingId) && !TextUtils.isEmpty(mRealToFloorName)
-                    && curIndoorBuildingId.equals(mRealToBuildingId) && !curFloorName.equals(mRealToFloorName)){
+                    && curIndoorBuildingId.equals(mRealToBuildingId) && !curFloorName.equals(mRealToFloorName)) {
                 realToMarkerGray();
-            }else{
+            } else {
                 realToMarkerHigh();
             }
 
             //当前建筑非当前楼层，置灰门marker
-            for (DoorMarker doorMarker : mDoorMarkers){
+            for (DoorMarker doorMarker : mDoorMarkers) {
                 String doorBuildingId = doorMarker.getBuildingId();
                 String doorFloorName = doorMarker.getFloorName();
                 if (!TextUtils.isEmpty(doorBuildingId) && !TextUtils.isEmpty(doorFloorName)
-                        && doorBuildingId.equals(curIndoorBuildingId) &&  !doorFloorName.equals(curFloorName)) {
+                        && doorBuildingId.equals(curIndoorBuildingId) && !doorFloorName.equals(curFloorName)) {
                     changeDoorMarkerState(doorMarker.getMarker(), true);
                 } else {
                     changeDoorMarkerState(doorMarker.getMarker(), false);
                 }
             }
-        }else{
+        } else {
             //当前室内图未激活时，高亮marker
             realFromMarkerHigh();
             realToMarkerHigh();
-            for (DoorMarker doorMarker : mDoorMarkers){
+            for (DoorMarker doorMarker : mDoorMarkers) {
                 changeDoorMarkerState(doorMarker.getMarker(), false);
             }
         }
     }
 
     private void realFromMarkerHigh() {
-        if (fromMarker != null){
+        if (fromMarker != null) {
             fromMarker.setIcon(BitmapDescriptorFactory.fromBitmap(mRealFromBitmap));
             fromMarker.hideInfoWindow();
         }
     }
 
     private void realFromMarkerGray() {
-        if (fromMarker != null){
+        if (fromMarker != null) {
             fromMarker.setIcon(BitmapDescriptorFactory.fromBitmap(mRealFromBitmapGray));
             fromMarker.showInfoWindow();
         }
     }
 
     private void realToMarkerHigh() {
-        if (targetMarker != null){
+        if (targetMarker != null) {
             targetMarker.setIcon(BitmapDescriptorFactory.fromBitmap(mRealToBitmap));
             targetMarker.hideInfoWindow();
         }
     }
 
     private void realToMarkerGray() {
-        if (targetMarker != null){
+        if (targetMarker != null) {
             targetMarker.setIcon(BitmapDescriptorFactory.fromBitmap(mRealToBitmapGray));
             targetMarker.showInfoWindow();
         }
     }
 
-    private void changeDoorMarkerState(Marker doorMarker, boolean isGray){
-        if (doorMarker.getOptions().getTitle().contains("进")){
+    private void changeDoorMarkerState(Marker doorMarker, boolean isGray) {
+        if (doorMarker.getOptions().getTitle().contains("进")) {
             //进门
-            if (isGray){
+            if (isGray) {
                 doorMarker.setIcon(BitmapDescriptorFactory.fromBitmap(doorInGray));
                 doorMarker.refreshInfoWindow();
-            }else{
+            } else {
                 doorMarker.setIcon(BitmapDescriptorFactory.fromBitmap(doorIn));
                 doorMarker.refreshInfoWindow();
             }
-        }else{
+        } else {
             //出门
-            if (isGray){
+            if (isGray) {
                 doorMarker.setIcon(BitmapDescriptorFactory.fromBitmap(doorOutGray));
                 doorMarker.refreshInfoWindow();
-            }else{
+            } else {
                 doorMarker.setIcon(BitmapDescriptorFactory.fromBitmap(doorOut));
                 doorMarker.refreshInfoWindow();
             }
@@ -487,22 +487,22 @@ public class RouteActivity extends AppCompatActivity {
             TextView textView = new TextView(getApplicationContext());
             textView.setBackgroundColor(Color.TRANSPARENT);
             textView.setText(marker.getTitle());
-            textView.setPadding(10,0,10,0);
+            textView.setPadding(10, 0, 10, 0);
 
             if (marker == fromMarker || marker == targetMarker) {
                 infoWindowView.setFillColor(ROUTE_LINE_COLOR_GRAY);
                 textView.setTextColor(ROUTE_LINE_COLOR_WHITE);
-            }else{
+            } else {
                 infoWindowView.setFillColor(ROUTE_LINE_COLOR_WHITE);
                 textView.setTextColor(ROUTE_LINE_COLOR);
             }
 
-            for (DoorMarker doorMarker : mDoorMarkers){
+            for (DoorMarker doorMarker : mDoorMarkers) {
                 //当前建筑非当前楼层，置灰marker
                 if (marker == doorMarker.getMarker()
                         && !TextUtils.isEmpty(curIndoorBuildingId) && !TextUtils.isEmpty(curFloorName)
                         && !TextUtils.isEmpty(doorMarker.getBuildingId()) && !TextUtils.isEmpty(doorMarker.getFloorName())
-                        && curIndoorBuildingId.equals(doorMarker.getBuildingId()) && !curFloorName.equals(doorMarker.getFloorName())){
+                        && curIndoorBuildingId.equals(doorMarker.getBuildingId()) && !curFloorName.equals(doorMarker.getFloorName())) {
                     infoWindowView.setFillColor(ROUTE_LINE_COLOR_GRAY);
                     textView.setTextColor(ROUTE_LINE_COLOR_WHITE);
                 }
@@ -510,7 +510,7 @@ public class RouteActivity extends AppCompatActivity {
 
             infoWindowView.addView(textView);
             infoWindowView.measure(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-            infoWindowView.setBubbleParams(InfoWindowRelativeLayout.BubbleOrientation.BOTTOM, (float) infoWindowView.getMeasuredWidth()/2);
+            infoWindowView.setBubbleParams(InfoWindowRelativeLayout.BubbleOrientation.BOTTOM, (float) infoWindowView.getMeasuredWidth() / 2);
 
             return infoWindowView;
         }

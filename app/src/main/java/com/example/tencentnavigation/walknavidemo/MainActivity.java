@@ -31,11 +31,11 @@ import com.tencent.map.geolocation.TencentLocationListener;
 import com.tencent.map.geolocation.TencentLocationManager;
 import com.tencent.map.geolocation.TencentLocationRequest;
 import com.tencent.map.navi.NaviMode;
-import com.tencent.map.navi.RouteSearchCallback;
-import com.tencent.map.navi.WalkNaviManager;
 import com.tencent.map.navi.data.GpsLocation;
 import com.tencent.map.navi.data.NaviPoi;
-import com.tencent.map.navi.data.RouteData;
+import com.tencent.map.navi.RouteSearchCallback;
+import com.tencent.map.navi.WalkNaviManager;
+import com.tencent.map.navi.data.WalkRouteData;
 import com.tencent.map.navi.data.line.Line;
 import com.tencent.map.navi.data.step.DoorStep;
 import com.tencent.map.navi.data.step.ElevatorStep;
@@ -61,7 +61,11 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         TencentLocationListener, LocationSource {
     //**************************常量**************************/
     private static final String TAG = "integrated";
-    private static final int REQUEST_SETTING = 1;
+
+    private static final int REQUEST_FROM = 1;
+    private static final int REQUEST_TO = 2;
+    private static final int REQUEST_SETTING = 3;
+
     private static final int ROUTE_LINE_COLOR = Color.argb(255, 59, 105, 239);
     private static final int ROUTE_LINE_COLOR_GRAY = Color.argb(255, 133, 133, 133);
     private static final int ROUTE_LINE_COLOR_WHITE = Color.argb(255, 255, 255, 255);
@@ -99,9 +103,6 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
 
     //********************UI View***********************/
     private MapView mMapView;
-    private RelativeLayout mTitleLayout;
-    private LinearLayout mLocationLayout;
-    private TabLayout mTBLayout;
     private LinearLayout mLlBottomBar;
     private TextView mTvTimeAndDistance;
     private TextView mTvStepDetail;
@@ -142,6 +143,8 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
     private String mRealToFloorName;
     private String curIndoorBuildingId;
     private String curFloorName;
+    private String mCity;
+    private String mCityCode;
     private int activeLevelIndex;
     //******************Map Relevant Obj***************/
 
@@ -168,7 +171,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
     private ArrayList<DoorMarker> mDoorMarkers = new ArrayList<>();
     //**************************polyline和marker**************************/
 
-    private RouteData curRouteData;
+    private WalkRouteData mCurWalkRouteData;
     private TencentLocation fistLocation;
     private TencentLocation mCurrentLocation;
     private Location location;
@@ -197,9 +200,6 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         if (tab != null) {
             tab.select();
         }
-        mTitleLayout = findViewById(R.id.titleLayout);
-        mLocationLayout = findViewById(R.id.locationLayout);
-        mTBLayout = findViewById(R.id.tbLayout);
         mLlBottomBar = findViewById(R.id.llBottomBar);
         mTvTimeAndDistance = findViewById(R.id.tvTimeAndDistance);
         mTvStepDetail = findViewById(R.id.tvStepDesc);
@@ -210,7 +210,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         mBtnStartNavi = findViewById(R.id.btnStartNavi);
 
         //设置定位图标
-        locationButton = (ImageView)findViewById(R.id.imageView);
+        locationButton = findViewById(R.id.imageView);
         locationButton.setOnClickListener(this);
 
         mRealFromBitmap =  DemoUtil.readAssetsImg(getApplicationContext(), NaviConfig.NAVI_LINE_FROM_MARKER);
@@ -225,7 +225,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         mMap = mMapView.getMap();
         mMap.setIndoorEnabled(true);
         mMap.enableMultipleInfowindow(true);
-        mMap.moveCamera(CameraUpdateFactory.zoomTo(19));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(40.040432, 116.273498), 16));//腾讯北京总部大楼
         mMap.setInfoWindowAdapter(mInfoWindowAdapter);
         mMap.setOnIndoorStateChangeListener(mOnIndoorStateChangeListener);
         mMap.setLocationSource(this);
@@ -246,14 +246,16 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
 
     private void checkPermissions() {
         //所要申请的权限
-        String[] perms = {
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.BLUETOOTH
-        };
-
+        ArrayList<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        permissions.add(Manifest.permission.READ_PHONE_STATE);
+        permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (Build.VERSION.SDK_INT >= 28) {
+            permissions.add("android.permission.ACCESS_BACKGROUND_LOCATION");
+        }
+        int size = permissions.size();
+        String[] perms = permissions.toArray(new String[size]);
         if (EasyPermissions.hasPermissions(this, perms)) {//检查是否获取该权限
             Log.i(TAG, "已获取权限");
         } else {
@@ -362,6 +364,63 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && data != null) {
             switch (requestCode) {
+                case REQUEST_FROM:
+                    break;
+                case REQUEST_TO: {
+                    String uid = data.getStringExtra("uid");
+                    String title = data.getStringExtra("title");
+                    String address = data.getStringExtra("address");
+                    String floorName = data.getStringExtra("floorName");
+                    String buildingId = data.getStringExtra("buildingId");
+                    double latitude = data.getDoubleExtra("latitude", 0);
+                    double longitude = data.getDoubleExtra("longitude", 0);
+
+                    if (targetMarker == null) {
+                        if (mCurrentLocation == null) {
+                            Toast.makeText(this, "没有定位信息，请检查WIFI、GPS、蓝牙是否打开", Toast.LENGTH_LONG).show();
+                        } else {
+                            //设置起点为当前位置
+                            mRealFromBuildingId = mCurrentLocation.getIndoorBuildingId();
+                            mRealFromFloorName = mCurrentLocation.getIndoorBuildingFloor();
+                            MarkerOptions fromMarkerOptions = new MarkerOptions(new LatLng(location.getLatitude(), location.getLongitude()))
+                                    .icon(BitmapDescriptorFactory.fromBitmap(mRealFromBitmap))
+                                    .anchor(0.5f, 0.5f)
+                                    .level(OverlayLevel.OverlayLevelAboveLabels)
+                                    .title(mRealFromFloorName)
+                                    .zIndex(MARKER_FROM_TO_ZINDEX);
+                            fromMarker = mMap.addMarker(fromMarkerOptions);
+                            fromMarker.setClickable(false);
+                            fromMarker.hideInfoWindow();
+                            fromPoi = location2NaviPoi(mCurrentLocation);
+                            mTvStartPos.setText("我的位置");
+
+                            //设置终点为点选poi
+                            mRealToBuildingId = buildingId;
+                            mRealToFloorName = floorName;
+                            MarkerOptions targetMarkerOptions = new MarkerOptions(new LatLng(latitude, longitude))
+                                    .title(title)
+                                    .icon(BitmapDescriptorFactory.fromBitmap(mRealToBitmap))
+                                    .anchor(0.5f, 0.5f)
+                                    .level(OverlayLevel.OverlayLevelAboveLabels)
+                                    .title(mRealToFloorName)
+                                    .zIndex(MARKER_FROM_TO_ZINDEX);
+                            targetMarker = mMap.addMarker(targetMarkerOptions);
+                            targetMarker.setClickable(false);
+                            targetMarker.hideInfoWindow();
+                            targetPoi = new NaviPoi();
+                            targetPoi.setId(uid);
+                            targetPoi.setWord(title);
+                            targetPoi.setLatitude(latitude);
+                            targetPoi.setLongitude(longitude);
+                            targetPoi.setBuildingId(buildingId);
+                            targetPoi.setFloorName(floorName);
+                            mTvEndPos.setText(title);
+
+                            searchRoutes(fromPoi, targetPoi);
+                        }
+                    }
+                    break;
+                }
                 case REQUEST_SETTING: {
                     mShowNaviPanel = data.getBooleanExtra("showNaviPanel", true);
                     mNaviMode = (NaviMode) data.getSerializableExtra("naviMode");
@@ -390,9 +449,9 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                     , ((IndoorMapPoi) mapPoi).getFloorName());
         }
         if (targetMarker == null) {
-            if (mCurrentLocation == null){
+            if (mCurrentLocation == null) {
                 Toast.makeText(this, "没有定位信息，请检查WIFI、GPS、蓝牙是否打开", Toast.LENGTH_LONG).show();
-            }else{
+            } else {
                 //设置起点为当前位置
                 mRealFromBuildingId = mCurrentLocation.getIndoorBuildingId();
                 mRealFromFloorName = mCurrentLocation.getIndoorBuildingFloor();
@@ -436,7 +495,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         }
 
         NaviPoi naviPoi = new NaviPoi();
-//        naviPoi.setWord(mapPoi.getName());
+        naviPoi.setWord(mapPoi.getName());
         naviPoi.setLatitude(mapPoi.getPosition().latitude);
         naviPoi.setLongitude(mapPoi.getPosition().longitude);
         if (mapPoi instanceof IndoorMapPoi) {
@@ -475,36 +534,34 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
     }
 
     @Override
-    public void onRouteSearchSuccess(ArrayList<RouteData> routes) {
+    public void onRouteSearchSuccess(ArrayList<WalkRouteData> routes) {
         if (routes == null || routes.size() == 0) {
             return;
         }
 
         //选择一条路线，虽然目前检索只返回一条
-        if (routes != null && routes.size() > 0){
-            curRouteData = routes.get(0);
-            Log.d(TAG, "points num: " + curRouteData.getRoutePoints().size());
-            Log.d(TAG, "points: " + curRouteData.getRoutePoints());
-            drawRoute(curRouteData);
-            drawRouteMarkers(curRouteData);
-            fillBottomRouteInfoPanel(curRouteData);
-            zoomMapToSpan(curRouteData);
-            changeMarkerState();
-        }
+        mCurWalkRouteData = routes.get(0);
+        Log.d(TAG, "points num: " + mCurWalkRouteData.getRoutePoints().size());
+        Log.d(TAG, "points: " + mCurWalkRouteData.getRoutePoints());
+        drawRoute(mCurWalkRouteData);
+        drawRouteMarkers(mCurWalkRouteData);
+        fillBottomRouteInfoPanel(mCurWalkRouteData);
+        zoomMapToSpan(mCurWalkRouteData);
+        changeMarkerState();
     }
 
-    private void searchRoutes(final NaviPoi fromPoi, final NaviPoi targetPoi) {
-        mWalkNaviManager.searchRoute(fromPoi, targetPoi, this);
+    private void searchRoutes(NaviPoi from, NaviPoi to) {
+        mWalkNaviManager.searchRoute(from, to, this);
     }
 
     /**
      * 绘制导航路线
      *
-     * @param routeData
+     * @param walkRouteData
      */
-    private void drawRoute(RouteData routeData) {
-        ArrayList<LatLng> points = routeData.getRoutePoints();
-        ArrayList<Line> lines = routeData.getRenderLines();
+    private void drawRoute(WalkRouteData walkRouteData) {
+        ArrayList<LatLng> points = walkRouteData.getRoutePoints();
+        ArrayList<Line> lines = walkRouteData.getRenderLines();
         for (int i = 0; i < lines.size(); i++) {
             Line line = lines.get(i);
             PolylineOptions polylineOptions = new PolylineOptions()
@@ -550,9 +607,9 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
     /**
      * 绘制路线上的出口、电梯等Marker
      */
-    private void drawRouteMarkers(RouteData routeData) {
-        ArrayList<LatLng> points = routeData.getRoutePoints();
-        ArrayList<Step> steps = routeData.getSteps();
+    private void drawRouteMarkers(WalkRouteData walkRouteData) {
+        ArrayList<LatLng> points = walkRouteData.getRoutePoints();
+        ArrayList<Step> steps = walkRouteData.getSteps();
         for (int i = 0; i < steps.size(); i++) {
             Step step = steps.get(i);
             if (step instanceof ElevatorStep) {
@@ -664,8 +721,8 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         }
     }
 
-    private void fillBottomRouteInfoPanel(RouteData routeData) {
-        if (routeData == null) {
+    private void fillBottomRouteInfoPanel(WalkRouteData walkRouteData) {
+        if (walkRouteData == null) {
             return;
         }
 
@@ -674,11 +731,11 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         StringBuffer routeInfo = new StringBuffer();
 
         //时长
-        String time = DemoUtil.time2string(routeData.getTime());
+        String time = DemoUtil.time2string(walkRouteData.getTime());
         routeInfo.append(time + " ");
 
         //距离
-        String distance = DemoUtil.distance2string(routeData.getDistance(), false);
+        String distance = DemoUtil.distance2string(walkRouteData.getDistance(), false);
         routeInfo.append(distance);
 
         if (!TextUtils.isEmpty(mTvTimeAndDistance.toString().trim())) {
@@ -693,24 +750,24 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         /*******************Step具体信息*******************/
         mTvStepDetail.setText(null);
         StringBuffer stepInfoDetail = new StringBuffer();
-        if (routeData.getLight() > 0) {
+        if (walkRouteData.getLight() > 0) {
             stepInfoDetail.append("红绿灯")
-                    .append(Integer.toString(routeData.getLight()));
+                    .append(Integer.toString(walkRouteData.getLight()));
         }
 
-        if (routeData.getCrosswalk() > 0) {
+        if (walkRouteData.getCrosswalk() > 0) {
             stepInfoDetail.append(" 人行横道")
-                    .append(Integer.toString(routeData.getCrosswalk()));
+                    .append(Integer.toString(walkRouteData.getCrosswalk()));
         }
 
-        if (routeData.getOverpass() > 0) {
+        if (walkRouteData.getOverpass() > 0) {
             stepInfoDetail.append(" 天桥")
-                    .append(Integer.toString(routeData.getOverpass()));
+                    .append(Integer.toString(walkRouteData.getOverpass()));
         }
 
-        if (routeData.getUnderpass() > 0) {
+        if (walkRouteData.getUnderpass() > 0) {
             stepInfoDetail.append(" 地下通道")
-                    .append(Integer.toString(routeData.getUnderpass()));
+                    .append(Integer.toString(walkRouteData.getUnderpass()));
         }
 
         if (!TextUtils.isEmpty(stepInfoDetail.toString().trim())) {
@@ -724,7 +781,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         mLlBottomBar.setVisibility(View.VISIBLE);
     }
 
-    private void zoomMapToSpan(final RouteData mCurrentRoute) {
+    private void zoomMapToSpan(final WalkRouteData mCurrentRoute) {
         if (mCurrentRoute == null) {
             return;
         }
@@ -770,6 +827,26 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                 mBtnStartNavi.setEnabled(true);
                 mBtnStartNavi.setBackgroundResource(R.drawable.btn_start_navi);
                 break;
+            case R.id.tvStartPos: {
+                Intent intent = new Intent(this, LocationSearchActivity.class);
+                intent.putExtra("buildingId", curIndoorBuildingId);
+                intent.putExtra("floorName", curFloorName);
+                startActivityForResult(intent, REQUEST_FROM);
+                break;
+            }
+            case R.id.tvEndPos: {
+                if (mCurrentLocation == null) {
+                    Toast.makeText(this, "没有定位信息，请检查WIFI、GPS、蓝牙是否打开", Toast.LENGTH_LONG).show();
+                } else {
+                    Intent intent = new Intent(this, LocationSearchActivity.class);
+                    intent.putExtra("buildingId", curIndoorBuildingId);
+                    intent.putExtra("floorName", curFloorName);
+                    intent.putExtra("city", mCity);
+                    intent.putExtra("cityCode", mCityCode);
+                    startActivityForResult(intent, REQUEST_TO);
+                }
+                break;
+            }
             case R.id.btnStartNavi: {
                 mBtnStartNavi.setEnabled(false);
                 mBtnStartNavi.setBackgroundResource(R.drawable.btn_start_navi_disable);
@@ -782,13 +859,13 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                 }
                 Intent intent = new Intent(this, NavigationActivity.class);
                 intent.putExtra("routeIndex", 0);
-                intent.putExtra("totalDistance", curRouteData.getDistance());
-                intent.putExtra("totalTime", curRouteData.getTime());
-                intent.putExtra("kcal", curRouteData.getKcal());
-                intent.putExtra("light", curRouteData.getLight());
-                intent.putExtra("crosswalk", curRouteData.getCrosswalk());
-                intent.putExtra("overpass",curRouteData.getOverpass());
-                intent.putExtra("underpass", curRouteData.getUnderpass());
+                intent.putExtra("totalDistance", mCurWalkRouteData.getDistance());
+                intent.putExtra("totalTime", mCurWalkRouteData.getTime());
+                intent.putExtra("kcal", mCurWalkRouteData.getKcal());
+                intent.putExtra("light", mCurWalkRouteData.getLight());
+                intent.putExtra("crosswalk", mCurWalkRouteData.getCrosswalk());
+                intent.putExtra("overpass", mCurWalkRouteData.getOverpass());
+                intent.putExtra("underpass", mCurWalkRouteData.getUnderpass());
                 intent.putExtra("showNaviPanel", mShowNaviPanel);
                 intent.putExtra("naviMode", mNaviMode);
                 intent.putExtra("simulateNavi", mCbSimulate.isChecked());
@@ -876,7 +953,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
             //首次定位成功时，设置楼层信息
             if (fistLocation == null){
                 fistLocation = mLocationManager.getLastKnownLocation();
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(fistLocation.getLatitude(), fistLocation.getLongitude())));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(fistLocation.getLatitude(), fistLocation.getLongitude()), 19));
                 mMap.setIndoorFloor(fistLocation.getIndoorBuildingId(), fistLocation.getIndoorBuildingFloor());
             }
 
@@ -890,16 +967,16 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                     .append(", FloorName=").append(location.getIndoorBuildingFloor());
             Log.d("integrated", sb.toString());
 
+            mCity = location.getCity();
+            mCityCode = location.getCityCode();
             mCurrentLocation = location;
-            GpsLocation gpsLocation = DemoUtil.convertToGpsLocation(location);
-            mWalkNaviManager.onLocationChanged(gpsLocation, error, reason);
             updateRealLocation();
         }
     }
 
     @Override
     public void onStatusUpdate(String name, int status, String desc) {
-        mWalkNaviManager.onStatusUpdate(name, status, desc);
+
     }
 
     private void updateRealLocation() {
@@ -924,7 +1001,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         request.setAllowCache(true);
         request.setAllowDirection(true);
         //request.setIndoorLocationMode(true);
-        request.setRequestLevel(TencentLocationRequest.REQUEST_LEVEL_GEO);
+        request.setRequestLevel(TencentLocationRequest.REQUEST_LEVEL_ADMIN_AREA);
         mLocationManager = TencentLocationManager.getInstance(this);
         int error = mLocationManager.requestLocationUpdates(request, this);
         if (error == 0) {

@@ -7,8 +7,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.tencent.map.navi.INaviView;
-import com.tencent.map.navi.data.NavigationData;
+import com.tencent.map.navi.IWalkNaviView;
+import com.tencent.map.navi.data.WalkNaviData;
 
 import java.text.DecimalFormat;
 
@@ -68,13 +68,13 @@ public class NaviPanelStyleActivity extends BaseActivity {
     }
 
     //实现INaviView协议
-    private INaviView customView = new INaviView() {
+    private IWalkNaviView customView = new IWalkNaviView() {
         @Override
         public void onGpsRssiChanged(int i) {
         }
 
         @Override
-        public void onUpdateNavigationData(NavigationData navigationData) {
+        public void onUpdateNavigationData(WalkNaviData navigationData) {
             //更新导航面板数据
             leftDisNext.setText(formatDis(navigationData.getDistance())+"后");
 
