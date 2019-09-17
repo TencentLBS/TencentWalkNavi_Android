@@ -100,8 +100,6 @@ public class NavigationActivity extends Activity {
     private int overpass;
     private int underpass;
 
-    private boolean mIsResumed;
-
     private boolean mIsArrivedDestination = false;
     private boolean mStopWhenArrived = true;
     private boolean mRecordLocation = false;
@@ -145,7 +143,6 @@ public class NavigationActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        mIsResumed = true;
         if (mNaviView != null) {
             mNaviView.onResume();
         }
@@ -178,6 +175,7 @@ public class NavigationActivity extends Activity {
                 mLocationSource.startLocation();
             }
             mWalkNaviManager.setLocationSource(mLocationSource);
+            mWalkNaviManager.startNavi(mRouteIndex);
         }
     }
 
@@ -186,7 +184,6 @@ public class NavigationActivity extends Activity {
         if (mNaviView != null) {
             mNaviView.onPause();
         }
-        mIsResumed = false;
         super.onPause();
     }
 
@@ -203,6 +200,7 @@ public class NavigationActivity extends Activity {
         mWalkNaviManager.removeAllNaviViews();
         mWalkNaviManager.removeNaviView(mINaviView);
         mWalkNaviManager.removeNaviView(mNaviView);
+        mWalkNaviManager.setLocationSource(null);
         mWalkNaviManager.setNaviCallback(null);
         mWalkNaviManager = null;
         if (mNaviView != null) {
@@ -289,6 +287,7 @@ public class NavigationActivity extends Activity {
 //        mNaviView.setNaviLineWidth(30);
 
         mTencentMap = mNaviView.getMap();
+        mTencentMap.setIndoorEnabled(true);
         //
         int color, resIdRoad, resIdNavi;
         color = Color.parseColor("#111111");
@@ -420,7 +419,7 @@ public class NavigationActivity extends Activity {
         }
 
         @Override
-        public void onRecalculateRouteSuccess(int type,ArrayList<WalkRouteData> routeDataList) {
+        public void onRecalculateRouteSuccess(int type,ArrayList<WalkRouteData> walkRouteDataList) {
             showBottomDialog(RECALCULATE_ROUTE_SUCCESS);
             //2s后取消弹窗
             Timer timer = new Timer();
@@ -446,7 +445,6 @@ public class NavigationActivity extends Activity {
 
         @Override
         public int onVoiceBroadcast(NaviTts tts) {
-            //TtsHelper.getInstance().read(tts, TencentNavigationActivity.this);
             Log.e(TAG, "语音播报文案：" + tts.getText());
             return 1;
         }
@@ -504,9 +502,9 @@ public class NavigationActivity extends Activity {
         public void onUpdateNavigationData(WalkNaviData data) {
             Log.e(TAG, "navigationData：" + data.getLeftDistance() +"--" + data.getLeftTime());
             updateLeftDistanceTime(data.getLeftDistance(), data.getLeftTime());
-            if (data.isIndoor()){
+            if (data.isIndoor()) {
                 mRoadNameView.setVisibility(View.INVISIBLE);
-            }else{
+            } else {
                 mRoadNameView.setText(data.getCurrentRoadName());
                 mRoadNameView.setVisibility(View.VISIBLE);
             }
