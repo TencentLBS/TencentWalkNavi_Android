@@ -26,3 +26,27 @@
 
 	private int callback(...);
 }
+
+-keep class com.tencent.map.route.data.Route {
+    <fields>;
+}
+-keep class com.tencent.map.engine.data.GuidanceGPSPoint {
+    <fields>;
+    public <methods>;
+}
+-keep class com.tencent.map.engine.data.GuidanceEventPoint {
+   <fields>;
+   public <methods>;
+}
+-keep class com.tencent.map.route.data.RouteSegment {
+    <fields>;
+    public <methods>;
+}
+-keep class com.tencent.map.route.data.Door {
+    <fields>;
+    public <methods>;
+}
+-keep class com.tencent.map.route.data.LandMarker {
+    <fields>;
+    public <methods>;
+}

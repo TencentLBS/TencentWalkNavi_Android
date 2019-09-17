@@ -28,8 +28,8 @@
 
 ```properties
 dependencies {
-	implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
-	...
+    implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
+    ...
 }
 ```
 
@@ -53,17 +53,17 @@ dependencies {
 
 ```properties
 android {
-	...
-	sourceSets.main{
+    ...
+    sourceSets.main{
         jniLibs.srcDirs = ['libs']
-	}
-	...
+    }
+    ...
 }
 ```
 
 上述步骤完成之后，rebuild一下即可。
 
-#### 使用maven集成SDK
+#### 使用maven集成SDK(推荐)
 
 首先在工程顶级 build.gradle 文件中加入：
 
@@ -117,6 +117,8 @@ task clean(type: Delete) {
 
 ```properties
 dependencies {
+    implementation 'com.tencent.map:tencent-map-vector-sdk:4.2.4'
+    implementation files('libs/TencentLocationSDK_v8.3.9.1_rb68853c7_20190409_143400_release.jar')
     implementation 'com.tencent.map:tencent-walk-nav-sdk:latest.release'//获取最新版本号
 }
 ```
@@ -129,12 +131,17 @@ dependencies {
 
 ```xml
 <!--腾讯室内外一体化导航SDK要求的权限(开始)-->
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- 通过网络得到粗略位置 -->
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- 访问WiFi状态，需要WiFi信息用于网络定位 -->
+<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /> <!-- 后台定位 -->
+<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> <!-- 修改WiFi状态，发起WiFi扫描, 需要WiFi信息用于网络定位 -->
+<uses-permission android:name="android.permission.CHANGE_WIFI_STATE" /> <!-- 访问网络状态, 检测网络的可用性，需要网络运营商相关信息用于网络定位 -->
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- 访问网络的变化, 需要某些信息用于网络定位 -->
+<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" /> <!-- 访问手机当前状态, 需要某些信息用于网络定位 -->
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- 访问网络获取地图服务 -->
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.BLUETOOTH" />
 <!--腾讯室内外一体化导航SDK要求的权限(结束)-->
 ```
 
@@ -149,6 +156,30 @@ dependencies {
 	public static native <methods>;
 
 	private int callback(...);
+}
+
+-keep class com.tencent.map.route.data.Route {
+    <fields>;
+}
+-keep class com.tencent.map.engine.data.GuidanceGPSPoint {
+    <fields>;
+    public <methods>;
+}
+-keep class com.tencent.map.engine.data.GuidanceEventPoint {
+   <fields>;
+   public <methods>;
+}
+-keep class com.tencent.map.route.data.RouteSegment {
+    <fields>;
+    public <methods>;
+}
+-keep class com.tencent.map.route.data.Door {
+    <fields>;
+    public <methods>;
+}
+-keep class com.tencent.map.route.data.LandMarker {
+    <fields>;
+    public <methods>;
 }
 ```
 
@@ -232,7 +263,7 @@ private RouteSearchCallback mRouteSearchCallback = new RouteSearchCallback() {
         }
 
         @Override
-        public void onRouteSearchSuccess(ArrayList<RouteData> routes) {
+        public void onRouteSearchSuccess(ArrayList<WalkRouteData> routes) {
             //路线规划成功，在路线规划成功后可绘制路线/发起导航
             //拿到路线数据routes，包含路线点串、距离、时间和各阶段详情以及用于地图上渲染的路线列表
         }
@@ -274,11 +305,40 @@ mWalkNaviManager.searchRoute(fromPoi, targetPoi, mRouteSearchCallback);
 
 模拟导航是基于线路模拟点驱动的导航过程，可以帮助用户预先了解路线情况。
 
-路线规划完成后，就可以开始实时导航，开始导航和结束导航的方法如下：
+腾讯导航SDK提供了定位源接口ILocationSource帮用户方便的实现实时导航和模拟导航，实时导航定位源是RealLocationSource，模拟导航定位源是SimulateLocationSource。
+
+#####实时导航
+
+```java
+ILocationSource mLocationSource;
+...
+
+mLocationSource = new RealLocationSource(getApplicationContext());
+mLocationSource.startLocation();
+mWalkNaviManager.setLocationSource(mLocationSource);
+```
+
+##### 模拟导航
+
+```java
+ILocationSource mLocationSource;
+...
+
+WalkRouteData walkRouteData = mWalkNaviManager.getRouteData(0);
+SimulateLocationSource locationSource = new SimulateLocationSource();
+locationSource.setRoute(walkRouteData);
+mLocationSource = locationSource;
+mLocationSource.startLocation();
+mWalkNaviManager.setLocationSource(mLocationSource);
+```
+
+路线规划和定位源设置完成后，就可以开始导航。
+
+开始导航和结束导航的方法如下：
 
 ```java
 //开始导航
-public void startNavi(int index, boolean isSimulate)
+public void startNavi(int index)
 
 //结束导航
 public void stopNavi()
@@ -286,10 +346,9 @@ public void stopNavi()
 
 参数：
 
-| 参数       | 说明                                                         |
-| ---------- | ------------------------------------------------------------ |
-| index      | 开始坐标在所有路线规划点串中的index，如果从路线规划起点开始导航则index传入0 |
-| isSimulate | false 表示真实导航，true 表示模拟导航                        |
+| 参数  | 说明                                                         |
+| ----- | ------------------------------------------------------------ |
+| index | 路线在所有规划路线中的index，如果选择规划路线数组中第一条路线则index传入0 |
 
 #### 导航界面
 
@@ -339,10 +398,10 @@ public void stopNavi()
 private WalkNaviView mWalkNaviView = findViewById(R.id.naviView);
 
 //创建导航面板更新协议INaviView.用户若需要自定义导航面板,可以实现该协议从而获取面板数据.
-private INaviView mINaviView = new INaviView() {
+private IWalkNaviView mINaviView = new IWalkNaviView() {
 
         @Override
-        public void onUpdateNavigationData(NavigationData data) {
+        public void onUpdateNavigationData(WalkNaviData data) {
             //获取实时导航数据：速度、距离、时间、路名、导航操作及转向箭头、是否室内等
         }
 
@@ -375,7 +434,7 @@ private WalkNaviCallback mWalkNaviCallback = new WalkNaviCallback() {
         }
 
         @Override
-        public void onRecalculateRouteSuccess(int type,ArrayList<RouteData> routeDataList) {
+        public void onRecalculateRouteSuccess(int type,ArrayList<WalkRouteData> routeDataList) {
             //重新路线规划成功
         }
 
@@ -387,6 +446,11 @@ private WalkNaviCallback mWalkNaviCallback = new WalkNaviCallback() {
         @Override
         public void onRecalculateRouteCanceled() {
             //重新路线规划取消
+        }
+  
+        @Override
+        public int onVoiceBroadcast(NaviTts naviTts) {
+            return 0;
         }
 
         @Override
@@ -494,9 +558,9 @@ private RouteSearchCallback mRouteSearchCallback = new RouteSearchCallback() {
         }
 
         @Override
-        public void onRouteSearchSuccess(ArrayList<RouteData> routes) {
+        public void onRouteSearchSuccess(ArrayList<WalkRouteData> routes) {
             if (mWalkNaviManager != null) {
-                mWalkNaviManager.startNavi(0, false);
+                mWalkNaviManager.startNavi(0);
             }
         }
     };
@@ -615,14 +679,14 @@ mWalkNaviView.setNaviPanelEnabled(false);
 ```java
 //新面板
 private ConstraintLayout newPanel = findViewById(R.id.panel_style);
-//实现INaviView协议
-private INaviView customView = new INaviView() {
+//实现 IWalkNaviView 协议
+private IWalkNaviView customView = new IWalkNaviView() {
         @Override
         public void onGpsRssiChanged(int i) {
         }
 
         @Override
-        public void onUpdateNavigationData(NavigationData navigationData) {
+        public void onUpdateNavigationData(WalkNaviData navigationData) {
             //更新导航面板数据
         }
     };
