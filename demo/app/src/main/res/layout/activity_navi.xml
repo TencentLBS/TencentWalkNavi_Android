@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.v7.widget.LinearLayoutCompat
+        android:id="@+id/set"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!--导航模式-->
+        <RadioGroup
+            android:id="@+id/navi_mode"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:checkedButton="@id/three_d_mode"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/naviview">
+
+            <RadioButton
+                android:id="@+id/three_d_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3D车头朝上" />
+
+            <RadioButton
+                android:id="@+id/two_d_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2D地图朝北" />
+
+            <RadioButton
+                android:id="@+id/over_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2D全览" />
+
+            <RadioButton
+                android:id="@+id/over_mode_left"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2D剩余" />
+        </RadioGroup>
+
+        <!--线路宽度设置-->
+        <LinearLayout
+            android:id="@+id/width"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="设置路线宽度："
+                android:textSize="@dimen/text_size_normal"/>
+            <SeekBar
+                android:layout_width="200dp"
+                android:layout_height="30dp"
+                android:id="@+id/widthbar"
+                android:max="30"
+
+                />
+        </LinearLayout>
+
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:id="@+id/panel_hide"
+            android:text="隐藏导航面板"
+            android:visibility="gone"/>
+
+
+        <com.tencent.map.navi.walk.WalkNaviView
+            android:id="@+id/naviview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            ></com.tencent.map.navi.walk.WalkNaviView>
+
+    </android.support.v7.widget.LinearLayoutCompat>
+
+    <include
+        android:id="@+id/panel_style"
+        layout="@layout/navigation_panel_style"
+        android:visibility="gone"
+        >
+    </include>
+
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/navi_stop"
+        android:layout_width="114dp"
+        android:layout_height="41dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="stop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</android.support.constraint.ConstraintLayout>
