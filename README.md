@@ -181,6 +181,15 @@ dependencies {
     <fields>;
     public <methods>;
 }
+
+-keep public class com.iflytek.tts.TtsService.Tts {
+	native <methods>;
+	public native <methods>;
+	public static native <methods>;
+}
+-keep public class com.iflytek.tts.TtsService.AudioData {
+	*;
+}
 ```
 
 然后在module的build.gradle文件中引用该混淆文件：
@@ -315,7 +324,6 @@ ILocationSource mLocationSource;
 
 mLocationSource = new RealLocationSource(getApplicationContext());
 mLocationSource.startLocation();
-mWalkNaviManager.setLocationSource(mLocationSource);
 ```
 
 ##### 模拟导航
@@ -329,7 +337,6 @@ SimulateLocationSource locationSource = new SimulateLocationSource();
 locationSource.setRoute(walkRouteData);
 mLocationSource = locationSource;
 mLocationSource.startLocation();
-mWalkNaviManager.setLocationSource(mLocationSource);
 ```
 
 路线规划和定位源设置完成后，就可以开始导航。
@@ -477,6 +484,8 @@ private WalkNaviManager mWalkNaviManager = new WalkNaviManager(this);
 mWalkNaviManager.setNaviCallback(mWalkNaviCallback);
 mWalkNaviManager.addNaviView(mINaviView);
 mWalkNaviManager.addNaviView(mWalkNaviView);
+//设置定位源
+mWalkNaviManager.setLocationSource(mLocationSource);
 ```
 
 **第3步，地图生命周期管理**
