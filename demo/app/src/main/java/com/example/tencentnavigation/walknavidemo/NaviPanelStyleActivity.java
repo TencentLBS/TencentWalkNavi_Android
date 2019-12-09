@@ -76,7 +76,7 @@ public class NaviPanelStyleActivity extends BaseActivity {
         @Override
         public void onUpdateNavigationData(WalkNaviData navigationData) {
             //更新导航面板数据
-            leftDisNext.setText(formatDis(navigationData.getDistance())+"后");
+            leftDisNext.setText(formatDis(navigationData.getDistanceToNextRoad())+"后");
 
             setLeftTimeDis(navigationData.getLeftTime(),navigationData.getLeftDistance());
             roadNext.setText("进入"+navigationData.getNextRoadName());

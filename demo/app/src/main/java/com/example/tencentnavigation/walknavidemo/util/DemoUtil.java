@@ -43,7 +43,7 @@ public class DemoUtil {
         location.setProvider(tencentLocation.getProvider());
         location.setVelocity(tencentLocation.getSpeed());
         location.setTime(tencentLocation.getTime());
-        location.setRssi(tencentLocation.getGPSRssi());
+        location.setGpsRssi(tencentLocation.getGPSRssi());
         location.setBuildingId(tencentLocation.getIndoorBuildingId());
         location.setFloorName(tencentLocation.getIndoorBuildingFloor());
 
@@ -63,7 +63,7 @@ public class DemoUtil {
         gpsLocation.setProvider(location.getProvider());
         gpsLocation.setVelocity(location.getSpeed());
         gpsLocation.setTime(location.getTime());
-        gpsLocation.setRssi(4);
+        gpsLocation.setGpsRssi(4);
 
         return gpsLocation;
     }
