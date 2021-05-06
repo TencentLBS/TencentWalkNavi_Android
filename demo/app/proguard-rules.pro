@@ -19,6 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+-dontwarn com.tencent.bugly.**
+-keep public class com.tencent.bugly.**{*;}
+-keep class android.support.**{*;}
+
 -keep public class com.tencent.map.engine.walk.WalkEngineJNI {
 	native <methods>;
 	public native <methods>;

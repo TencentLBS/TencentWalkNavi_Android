@@ -8,6 +8,7 @@ import com.tencent.map.navi.IWalkNaviView;
 import com.tencent.map.navi.RouteSearchCallback;
 import com.tencent.map.navi.WalkNaviCallback;
 import com.tencent.map.navi.WalkNaviManager;
+import com.tencent.map.navi.data.AttachedLocation;
 import com.tencent.map.navi.data.NaviPoi;
 import com.tencent.map.navi.data.NaviTts;
 import com.tencent.map.navi.data.WalkNaviData;
@@ -156,6 +157,11 @@ public class BaseActivity extends AppCompatActivity {
         @Override
         public void onLocationStatusChanged(String name, boolean isValid) {
             //定位相关设备状态
+        }
+
+        @Override
+        public void onUpdateAttachedLocation(AttachedLocation attachedLocation) {
+
         }
     };
 

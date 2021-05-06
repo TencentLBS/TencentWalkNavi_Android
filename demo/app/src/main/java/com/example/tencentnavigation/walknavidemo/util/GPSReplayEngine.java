@@ -12,7 +12,7 @@ import android.util.Log;
 
 import com.tencent.map.geolocation.TencentLocation;
 import com.tencent.map.geolocation.TencentLocationListener;
-import com.tencent.map.geolocation.TencentMotion;
+//import com.tencent.map.geolocation.TencentMotion;
 import com.tencent.map.geolocation.TencentPoi;
 
 import java.io.BufferedReader;
@@ -574,25 +574,25 @@ public class GPSReplayEngine implements Runnable {
 			return null;
 		}
 
-		@Override
-		public TencentMotion getMotion() {
-			return null;
-		}
-
-		@Override
-		public int getGpsQuality() {
-			return 0;
-		}
-
-		@Override
-		public float getDeltaAngle() {
-			return 0;
-		}
-
-		@Override
-		public float getDeltaSpeed() {
-			return 0;
-		}
+//		@Override
+//		public TencentMotion getMotion() {
+//			return null;
+//		}
+//
+//		@Override
+//		public int getGpsQuality() {
+//			return 0;
+//		}
+//
+//		@Override
+//		public float getDeltaAngle() {
+//			return 0;
+//		}
+//
+//		@Override
+//		public float getDeltaSpeed() {
+//			return 0;
+//		}
 
 		@Override
 		public int getCoordinateType() {
@@ -604,10 +604,10 @@ public class GPSReplayEngine implements Runnable {
 			return 0;
 		}
 
-		@Override
-		public Bundle getExtra() {
-			return null;
-		}
+//		@Override
+//		public Bundle getExtra() {
+//			return null;
+//		}
 
 		public void setLatitude(double latitude) {
 			this.latitude = latitude;

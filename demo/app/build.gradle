@@ -21,7 +21,7 @@ android {
             minifyEnabled false
         }
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -47,7 +47,7 @@ android {
 dependencies {
     //implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.tencent.map:tencent-map-vector-sdk:4.2.9'
-    implementation files('libs/TencentLocationSDK_v8.3.9.1_rb68853c7_20190409_143400_release.jar')
+    implementation files('libs/TencentLocationSDK_v6.1.0_r44638729_20210416_171810_release_manifest.aar')
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     testImplementation 'junit:junit:4.12'
@@ -58,6 +58,8 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.android.support:design:28.0.0'
     //implementation 'com.tencent.map:tencent-walk-nav-sdk:latest.release'//获取最新版本号
-    implementation files('libs/TencentWalkNaviSDK_v1.0_r426_39d6bf2_release.aar')
+    implementation files('libs/TencentWalkNaviSDK_v1.0_r437_7af1e8a_release.aar')
     implementation 'com.tencent.map:tencent-nav-common-sdk:1.0.0.1'
+    implementation 'com.tencent.bugly:crashreport_upgrade:1.3.9'
+    implementation 'com.tencent.bugly:nativecrashreport:3.6.0.1'
 }

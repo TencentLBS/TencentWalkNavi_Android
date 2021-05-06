@@ -33,6 +33,7 @@ import com.tencent.map.navi.IWalkNaviView;
 import com.tencent.map.navi.NaviMode;
 import com.tencent.map.navi.WalkNaviCallback;
 import com.tencent.map.navi.WalkNaviManager;
+import com.tencent.map.navi.data.AttachedLocation;
 import com.tencent.map.navi.data.GpsLocation;
 import com.tencent.map.navi.data.NaviTts;
 import com.tencent.map.navi.data.WalkNaviData;
@@ -184,6 +185,11 @@ public class NavigationActivity extends Activity {
         if (mNaviView != null) {
             mNaviView.onPause();
         }
+
+        if (mLocationSource != null) {
+            mLocationSource.stopLocation();
+            mLocationSource = null;
+        }
         super.onPause();
     }
 
@@ -207,10 +213,7 @@ public class NavigationActivity extends Activity {
             mNaviView.onDestroy();
             mNaviView = null;
         }
-        if (mLocationSource != null) {
-            mLocationSource.stopLocation();
-            mLocationSource = null;
-        }
+
         super.onDestroy();
     }
 
@@ -493,6 +496,11 @@ public class NavigationActivity extends Activity {
             }else{
                 bottomDialog.cancel();
             }
+        }
+
+        @Override
+        public void onUpdateAttachedLocation(AttachedLocation attachedLocation) {
+
         }
     };
 

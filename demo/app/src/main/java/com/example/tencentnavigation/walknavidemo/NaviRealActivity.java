@@ -14,6 +14,7 @@ import com.tencent.map.location.RealLocationSource;
 import com.tencent.map.navi.RouteSearchCallback;
 import com.tencent.map.navi.WalkNaviCallback;
 import com.tencent.map.navi.WalkNaviManager;
+import com.tencent.map.navi.data.AttachedLocation;
 import com.tencent.map.navi.data.NaviPoi;
 import com.tencent.map.navi.data.NaviTts;
 import com.tencent.map.navi.data.WalkRouteData;
@@ -184,6 +185,11 @@ public class NaviRealActivity extends AppCompatActivity implements View.OnClickL
         @Override
         public void onLocationStatusChanged(String name, boolean isValid){
             //定位相关设备状态
+        }
+
+        @Override
+        public void onUpdateAttachedLocation(AttachedLocation attachedLocation) {
+
         }
     };
 

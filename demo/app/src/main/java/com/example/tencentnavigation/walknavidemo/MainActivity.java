@@ -23,9 +23,11 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.*;
 
+import com.tencent.bugly.Bugly;
+import com.tencent.bugly.crashreport.CrashReport;
 import com.example.tencentnavigation.walknavidemo.util.DemoUtil;
-import com.example.tencentnavigation.walknavidemo.util.DoorMarker;
 import com.example.tencentnavigation.walknavidemo.util.NaviConfig;
+
 import com.tencent.map.geolocation.TencentLocation;
 import com.tencent.map.geolocation.TencentLocationListener;
 import com.tencent.map.geolocation.TencentLocationManager;
@@ -33,6 +35,7 @@ import com.tencent.map.geolocation.TencentLocationRequest;
 import com.tencent.map.navi.NaviMode;
 import com.tencent.map.navi.data.GpsLocation;
 import com.tencent.map.navi.data.NaviPoi;
+import com.example.tencentnavigation.walknavidemo.util.DemoUtil;
 import com.tencent.map.navi.RouteSearchCallback;
 import com.tencent.map.navi.WalkNaviManager;
 import com.tencent.map.navi.data.WalkRouteData;
@@ -40,6 +43,7 @@ import com.tencent.map.navi.data.line.Line;
 import com.tencent.map.navi.data.step.DoorStep;
 import com.tencent.map.navi.data.step.ElevatorStep;
 import com.tencent.map.navi.data.step.Step;
+import com.tencent.map.ui.DoorMarker;
 import com.tencent.map.ui.InfoWindowRelativeLayout;
 import com.tencent.tencentmap.mapsdk.maps.CameraUpdateFactory;
 import com.tencent.tencentmap.mapsdk.maps.LocationSource;
@@ -186,6 +190,10 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        CrashReport.initCrashReport(getApplicationContext(), "2a10c3e959", false);
+        CrashReport.setHandleNativeCrashInJava(true);
+
+//        CrashReport.testNativeCrash();
         initViews();
         initListeners();
         checkPermissions();
@@ -200,6 +208,8 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         if (tab != null) {
             tab.select();
         }
+        //mTitleLayout = findViewById(R.id.titleLayout);
+        //mLocationLayout = findViewById(R.id.locationLayout);
         mLlBottomBar = findViewById(R.id.llBottomBar);
         mTvTimeAndDistance = findViewById(R.id.tvTimeAndDistance);
         mTvStepDetail = findViewById(R.id.tvStepDesc);
@@ -321,6 +331,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         }
         mBtnStartNavi.setEnabled(true);
         mBtnStartNavi.setBackgroundResource(R.drawable.btn_start_navi);
+        Log.d("Main Activity", "onResume startLocation");
         startLocation();
     }
 
@@ -330,6 +341,8 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         if (mMapView != null) {
             mMapView.onPause();
         }
+
+        Log.d("Main Activity", "onPause stopLocation");
         stopLocation();
     }
 
@@ -384,6 +397,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                             mRealFromFloorName = mCurrentLocation.getIndoorBuildingFloor();
                             MarkerOptions fromMarkerOptions = new MarkerOptions(new LatLng(location.getLatitude(), location.getLongitude()))
                                     .icon(BitmapDescriptorFactory.fromBitmap(mRealFromBitmap))
+                                    .indoorInfo(new IndoorInfo(mRealFromBuildingId, mRealFromFloorName))
                                     .anchor(0.5f, 0.5f)
                                     .level(OverlayLevel.OverlayLevelAboveLabels)
                                     .title(mRealFromFloorName)
@@ -399,6 +413,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                             mRealToFloorName = floorName;
                             MarkerOptions targetMarkerOptions = new MarkerOptions(new LatLng(latitude, longitude))
                                     .title(title)
+                                    .indoorInfo(new IndoorInfo(mRealToBuildingId, mRealToFloorName))
                                     .icon(BitmapDescriptorFactory.fromBitmap(mRealToBitmap))
                                     .anchor(0.5f, 0.5f)
                                     .level(OverlayLevel.OverlayLevelAboveLabels)
@@ -462,8 +477,8 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                         .title(mRealFromFloorName)
                         .zIndex(MARKER_FROM_TO_ZINDEX);
                 fromMarker = mMap.addMarker(fromMarkerOptions);
-                fromMarker.setClickable(false);
-                fromMarker.hideInfoWindow();
+                fromMarker.setClickable(true);
+                fromMarker.showInfoWindow();
                 fromPoi = location2NaviPoi(mCurrentLocation);
                 mTvStartPos.setText("我的位置");
 
@@ -818,6 +833,8 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                     realLocation = null;
                     mTvStartPos.setText("我的位置");
                     mTvEndPos.setText("点击底图POI设置终点");
+//                    stopLocation();
+//                    startLocation();
                 }
 
                 if (mLlBottomBar != null) {
@@ -1000,7 +1017,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         request.setInterval(1000);
         request.setAllowCache(true);
         request.setAllowDirection(true);
-        //request.setIndoorLocationMode(true);
+        request.setIndoorLocationMode(true);
         request.setRequestLevel(TencentLocationRequest.REQUEST_LEVEL_ADMIN_AREA);
         mLocationManager = TencentLocationManager.getInstance(this);
         int error = mLocationManager.requestLocationUpdates(request, this);
