@@ -46,6 +46,7 @@ android {
 
 dependencies {
     //implementation fileTree(include: ['*.jar'], dir: 'libs')
+
     implementation 'com.tencent.map:tencent-map-vector-sdk:4.2.9'
     implementation files('libs/TencentLocationSDK_v6.1.0_r44638729_20210416_171810_release_manifest.aar')
     implementation 'com.android.support:appcompat-v7:28.0.0'

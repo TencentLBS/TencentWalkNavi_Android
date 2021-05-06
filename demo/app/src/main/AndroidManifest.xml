@@ -25,7 +25,7 @@
         android:theme="@style/AppTheme">
         <meta-data
             android:name="TencentMapSDK"
-            android:value="LEYBZ-DXVWP-ZIXD3-L4PNL-N4RAS-4HBS4" />
+            android:value="您的key" />
 
         <!--必须配置-->
         <activity
