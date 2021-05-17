@@ -173,13 +173,13 @@ public class NaviSimuActivity extends AppCompatActivity implements View.OnClickL
         @Override
         public void onArrivedDestination() {
             //到达目的地
-            if (mWalkNaviManager != null) {
-                mWalkNaviManager.stopNavi();
-            }
-            if (mLocationSource != null) {
-                mLocationSource.stopLocation();
-                mLocationSource = null;
-            }
+//            if (mWalkNaviManager != null) {
+//                mWalkNaviManager.stopNavi();
+//            }
+//            if (mLocationSource != null) {
+//                mLocationSource.stopLocation();
+//                mLocationSource = null;
+//            }
         }
 
         @Override

@@ -454,17 +454,17 @@ public class NavigationActivity extends Activity {
 
         @Override
         public void onArrivedDestination() {
-            Log.e(TAG, "到达目的地 mStopWhenArrived: " + mStopWhenArrived);
-            mIsArrivedDestination = true;
-            stopNavigation();
-            StringBuilder summary = new StringBuilder(ARRIVED_DESTINATION);
-            summary.append("\n\n" + "全程(m): " + totalDistance);
-            summary.append("\n"  + "用时(min): " + totalTime);
-            summary.append("\n" + "消耗热量(kcal): " + kcal);
-            showBottomDialog(summary.toString());
-            if (mStopWhenArrived) {
-                finish();
-            }
+//            Log.e(TAG, "到达目的地 mStopWhenArrived: " + mStopWhenArrived);
+//            mIsArrivedDestination = true;
+//            stopNavigation();
+//            StringBuilder summary = new StringBuilder(ARRIVED_DESTINATION);
+//            summary.append("\n\n" + "全程(m): " + totalDistance);
+//            summary.append("\n"  + "用时(min): " + totalTime);
+//            summary.append("\n" + "消耗热量(kcal): " + kcal);
+//            showBottomDialog(summary.toString());
+//            if (mStopWhenArrived) {
+//                finish();
+//            }
         }
 
         @Override
