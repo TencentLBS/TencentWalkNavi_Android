@@ -1,9 +1,5 @@
 # 一体化导航SDK
 
-
-
-[TOC]
-
 ### 介绍
 
 室内外一体化步行导航SDK提供步行在线导航功能。该产品的路径计算与实时交通信息相结合，提供路径规划、模拟导航、实时导航、导航设置、自定义导航界面等功能，力求为用户提供更加人性化的导航服务。
@@ -225,9 +221,16 @@ buildTypes {
 提供起点和终点就可以进行步行路线规划，步行路线规划需要联网。
 
 ```java
-public void searchRoute(NaviPoi from, 
-                        NaviPoi to, 
-                        RouteSearchCallback searchCallback) throws NullPointerException
+    /**
+     * 导航的路线规划接口, 通过传入起点、终点发起路线规划。可以通过设置回调参数获取路线。
+     *
+     * @param from           起点经纬度（必填）
+     * @param to             终点经纬度（必填）
+     * @param routeSearchOptions search参数（可选）
+     * @param searchCallback 路线规划回调（可选）
+     */
+    public void searchRoute(NaviPoi from, NaviPoi to, RouteSearchOptions routeSearchOptions,
+                            RouteSearchCallback searchCallback) throws NullPointerException
 ```
 
 参数：
@@ -236,6 +239,7 @@ public void searchRoute(NaviPoi from,
 | -------------- | :----------------------------------------------------------- |
 | from           | NaviPoi：<br />setLatitude方法：设置纬度，不为空<br />setLongitude方法：设置经度，不为空<br />setBuildingId方法：设置建筑ID，可为空<br />setFloorName方法：设置楼层信息，可为空 |
 | to             | 同上                                                         |
+| routeSearchOptions             | 算路options：costType：室内偏好类型：1：正常权制，2：扶梯优先，3：直梯优先，4：楼梯优先     |
 | searchCallback | RouteSearchCallback：<br />onRouteSearchFailure回调：路线规划失败回调，errorCode见下表，errorMessage为错误说明<br />onRouteSearchSuccess回调：路线规划成功回调，routes为规划出的路线数据列表 |
 
 路线查询失败错误码RouteSearchError：
@@ -294,8 +298,11 @@ targetPoi.setLatitude(39.958834);
 targetPoi.setLongitude(116.287988);
 targetPoi.setBuildingId("1100005175");
 targetPoi.setFloorName("F3");
+// 算路options
+RouteSearchOptions routeSearchOptions = new RouteSearchOptions();
+routeSearchOptions.costType = 1;
 //发起路线规划
-mWalkNaviManager.searchRoute(fromPoi, targetPoi, mRouteSearchCallback);
+mWalkNaviManager.searchRoute(fromPoi, targetPoi, routeSearchOptions, mRouteSearchCallback);
 ```
 
 **第4步，处理路线规划结果**
