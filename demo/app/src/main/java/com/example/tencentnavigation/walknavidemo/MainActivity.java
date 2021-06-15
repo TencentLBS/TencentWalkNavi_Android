@@ -13,6 +13,8 @@ import android.location.Location;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.TabLayout;
@@ -43,6 +45,7 @@ import com.tencent.map.navi.data.line.Line;
 import com.tencent.map.navi.data.step.DoorStep;
 import com.tencent.map.navi.data.step.ElevatorStep;
 import com.tencent.map.navi.data.step.Step;
+import com.tencent.map.search.walk.RouteSearchOptions;
 import com.tencent.map.ui.DoorMarker;
 import com.tencent.map.ui.InfoWindowRelativeLayout;
 import com.tencent.tencentmap.mapsdk.maps.CameraUpdateFactory;
@@ -252,6 +255,7 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
         mMap.setOnMapPoiClickListener(this);
         mWalkNaviManager = DemoUtil.getWalkNaviManager(this);
         mIvStartPos.setOnClickListener(this);
+
     }
 
     private void checkPermissions() {
@@ -566,7 +570,8 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
     }
 
     private void searchRoutes(NaviPoi from, NaviPoi to) {
-        mWalkNaviManager.searchRoute(from, to, this);
+        mWalkNaviManager.searchRoute(from, to, null,this);
+//        mWalkNaviManager.searchRoute(from, to, this);
     }
 
     /**
@@ -696,8 +701,13 @@ public class MainActivity extends Activity implements TencentMap.OnMapPoiClickLi
                     startMarkerOption.icon(BitmapDescriptorFactory.fromBitmap(upBitmap));
                     targetMarkerOption.icon(BitmapDescriptorFactory.fromBitmap(upBitmap));
                 }
-                Marker startMarker = mMap.addMarker(startMarkerOption);
-                startMarker.showInfoWindow();
+                final Marker startMarker = mMap.addMarker(startMarkerOption);
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        startMarker.showInfoWindow();
+                    }
+                }, 1000);
                 Marker targetMarker = mMap.addMarker(targetMarkerOption);
                 mRouteMarkers.add(startMarker);
                 mRouteMarkers.add(targetMarker);

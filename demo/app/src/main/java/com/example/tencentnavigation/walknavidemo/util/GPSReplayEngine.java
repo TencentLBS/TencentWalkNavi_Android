@@ -575,6 +575,11 @@ public class GPSReplayEngine implements Runnable {
 		}
 
 //		@Override
+//		public String getCityPhoneCode() {
+//			return null;
+//		}
+
+//		@Override
 //		public TencentMotion getMotion() {
 //			return null;
 //		}
